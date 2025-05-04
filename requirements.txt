@@ -1,0 +1,12 @@
+# Python version
+python_version >= 3.9
+
+# Standard library imports (no need to install these)
+# - csv
+# - json
+# - argparse
+# - math
+# - datetime
+# - pathlib
+
+# No external dependencies required
