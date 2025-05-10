@@ -22,11 +22,13 @@ def get_total_panel_count(file_path):
         reader = csv.reader(file)
         for row in reader:
             if len(row) < 2:
+                print(f"Warning: Skipping malformed row(expected at least 2 columns): {row}")
                 continue            
             
             panel_id, date_str = row[0].strip(), row[1].strip()
 
             if not panel_id or not date_str:
+                print(f"Warning: Skipping incomplete row : {row}")
                 continue
 
             try:
@@ -34,6 +36,7 @@ def get_total_panel_count(file_path):
                 if date_obj.year == 2024:
                     unique_panels.add(panel_id)
             except ValueError:
+                    print(f"Warning: Skipping row with Invalid date format : '{date_str}' (expected YYYY-MM-DD)")
                     continue
     return
 
@@ -56,26 +59,31 @@ def read_income_data(file_path):
         reader = csv.reader(file)
         for row in reader:
             if len(row) < 2:
+                print(f"Warning: Skipping malformed row (expected 2 columns): {row}")
                 continue
             
             month, gross_income = row[0].strip(), row[1].strip()
 
-            if not month or not gross_income or not gross_income.replace(',', '').replace('.', '', 1).isdigit():
+            if not month or not gross_income:
+                print(f"Warning: Skipping row with missing fields: {row}")
                 continue
+
+            if not gross_income.replace(',', '').replace('.', '', 1).isdigit():
+                    print(f"Warning: Skipping row with Invalid income value: '{gross_income}'")
+                    continue
 
             try:
                 month_obj = datetime.strptime(month, "%Y-%m")
-                if month_obj.year == 2024:
+            except ValueError:
+                print(f"Warning: Skipping row with Invalid date format: '{month}' (expected YYYY-MM)")
+                continue
+
+            if month_obj.year == 2024:
                     income = float(gross_income.replace(",", ""))
                     income_data.append({
                         "Month": month_obj.month,
                         "GrossIncome": income
                     })
-            except ValueError:
-                continue
-
-
-
 
 
 def generate_breakdown(bracket_value, taxable_value, rate_value, tax_value):
@@ -87,9 +95,11 @@ def generate_breakdown(bracket_value, taxable_value, rate_value, tax_value):
                 "tax": tax_value
             })
 
+def get_round_tax(tax):
+    tax = math.ceil(tax / 0.07) * 0.07
+    return round(tax, 2)
 
 def calculate_tax_for_year(month):
-    print(f"Calculating tax for the year 2024")
     global total_tax
     global taxable_income
     global breakdown
@@ -99,7 +109,8 @@ def calculate_tax_for_year(month):
     breakdown = []
 
     if taxable_income >= 90000:
-        green_bonus = 50 * total_panel_count
+        green_bonus = 0
+
 
     tax = 0
     current_income = taxable_income
@@ -108,22 +119,21 @@ def calculate_tax_for_year(month):
             previous_bracket = tax_bracket_2024[index-1]["UpperBound"] if index > 0 else 0
             effective_bracket = bracket["UpperBound"] - previous_bracket
             current_bracket_tax = (effective_bracket * bracket["Rate"]) / 100
-            tax += current_bracket_tax
+            tax += get_round_tax(current_bracket_tax)
             current_income = taxable_income - bracket["UpperBound"]
             generate_breakdown(bracket["Bracket"], effective_bracket, bracket["Rate"]/100, current_bracket_tax)
            
         else:
             current_bracket_tax = (current_income * bracket["Rate"]) / 100
-            tax += current_bracket_tax
+            tax += get_round_tax(current_bracket_tax)
             generate_breakdown(bracket["Bracket"], current_income, bracket["Rate"]/100, current_bracket_tax)
             break
     
-    total_tax = math.ceil(tax / 0.07) * 0.07
+    total_tax = get_round_tax(tax)
     return
 
 
 def calculate_tax_for_each_month():
-    print(f"Calculating tax for each month")
     global total_tax
     global taxable_income
     global breakdown
@@ -144,7 +154,7 @@ def calculate_tax_for_each_month():
                 if taxable_income <= bracket["UpperBound"]:
                     current_bracket_tax = (current_total_income * bracket["Rate"]) / 100
                     generate_breakdown(bracket["Bracket"], current_total_income, bracket["Rate"]/100, current_bracket_tax)
-                    tax += current_bracket_tax
+                    tax += get_round_tax(current_bracket_tax)
                     break
                 else:
                     previous_bracket = tax_bracket_2024[index-1]["UpperBound"] if index > 0 else 0
@@ -154,7 +164,7 @@ def calculate_tax_for_each_month():
                     generate_breakdown(bracket["Bracket"], effective_bracket, bracket["Rate"]/100, current_bracket_tax)
                     current_total_income = taxable_income - bracket["UpperBound"]
             total_tax = tax
-            total_tax = math.ceil(total_tax / 0.07) * 0.07
+            total_tax = get_round_tax(total_tax)
     return 
 
 
@@ -163,16 +173,15 @@ def calculate_final_tax_summary( taxable_income, total_tax, breakdown, basic, gr
     return {
         "taxable_income": taxable_income,
         "total_tax": total_tax,
-        "effective_rate": total_tax / taxable_income if taxable_income > 0 else 0,
+        "effective_rate": round((total_tax / taxable_income if taxable_income > 0 else 0),2),
         "marginal_rate": breakdown[-1]["rate"] if breakdown else [],
         "breakdown": breakdown,
         "credits": {
             "basic": basic,
             "green_bonus": green_bonus,
-            "net_tax": total_tax - basic - green_bonus
+            "net_tax": get_round_tax(total_tax - basic - green_bonus)
         }
     }
-
 
 
 
@@ -183,6 +192,8 @@ def main(args):
 
     incomePath = args.income_csv
     panelPath = args.panels_csv
+
+        
     print(f"Income CSV Path: {incomePath}")
     print(f"Panels CSV Path: {panelPath}")
 
@@ -237,12 +248,15 @@ def main(args):
     print(json.dumps(final_summary, indent=2))
 
 
+class CustomArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        print("Error: Please provide both 'income-csv' and 'panels-csv' file paths.")
+        exit(1)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process income and panel data.")
+    parser = CustomArgumentParser(description="Process income and panel data.")
     parser.add_argument("income_csv", type=Path, help="Path to income.csv")
     parser.add_argument("panels_csv", type=Path, help="Path to panels.csv")
     args = parser.parse_args()
     main(args)
-

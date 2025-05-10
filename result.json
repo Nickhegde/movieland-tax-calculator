@@ -2,13 +2,11 @@ Income CSV Path: income.csv
 Panels CSV Path: panels.csv
 Total unique panels in 2024: 6
 Tax Brackets for 2024: [{'Bracket': 1, 'Rate': 7, 'UpperBound': 2388}, {'Bracket': 2, 'Rate': 11, 'UpperBound': 9101}, {'Bracket': 3, 'Rate': 16, 'UpperBound': 23855}, {'Bracket': 4, 'Rate': 22, 'UpperBound': 56935}, {'Bracket': 5, 'Rate': 29, 'UpperBound': inf}]
-Income Data for 2024: [{'Month': 1, 'GrossIncome': 5800.0}, {'Month': 2, 'GrossIncome': 6200.0}, {'Month': 3, 'GrossIncome': 7100.0}, {'Month': 4, 'GrossIncome': 2500.0}, {'Month': 5, 'GrossIncome': 4500.0}, {'Month': 6, 'GrossIncome': 9100.0}, {'Month': 7, 'GrossIncome': 4700.0}, {'Month': 8, 'GrossIncome': 5500.0}, {'Month': 9, 'GrossIncome': 5900.0}, {'Month': 10, 'GrossIncome': 5000.0}, {'Month': 11, 'GrossIncome': 5000.0}, {'Month': 12, 'GrossIncome': 5000.0}]
-Calculating tax for each month
-Calculating tax for the year 2024
+Income Data for 2024: [{'Month': 1, 'GrossIncome': 5800.0}, {'Month': 2, 'GrossIncome': 6200.0}, {'Month': 3, 'GrossIncome': 7100.0}, {'Month': 4, 'GrossIncome': 2500.0}, {'Month': 5, 'GrossIncome': 4500.0}, {'Month': 6, 'GrossIncome': 91000.0}, {'Month': 7, 'GrossIncome': 4700.0}, {'Month': 8, 'GrossIncome': 5500.0}, {'Month': 9, 'GrossIncome': 5900.0}, {'Month': 10, 'GrossIncome': 5000.0}, {'Month': 11, 'GrossIncome': 5000.0}, {'Month': 12, 'GrossIncome': 5000.0}]
 {
-  "taxable_income": 66300.0,
-  "total_tax": 13259.680000000002,
-  "effective_rate": 0.199995173453997,
+  "taxable_income": 148200.0,
+  "total_tax": 37010.75,
+  "effective_rate": 0.25,
   "marginal_rate": 0.29,
   "breakdown": [
     {
@@ -37,14 +35,14 @@ Calculating tax for the year 2024
     },
     {
       "bracket": 5,
-      "taxable": 9365.0,
+      "taxable": 91265.0,
       "rate": 0.29,
-      "tax": 2715.85
+      "tax": 26466.85
     }
   ],
   "credits": {
     "basic": 600,
-    "green_bonus": 300,
-    "net_tax": 12359.680000000002
+    "green_bonus": 0,
+    "net_tax": 36410.78
   }
 }
